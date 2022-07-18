@@ -1,0 +1,6 @@
+<mod displayName="Captain Voice Diversity" unique="CaptainVoiceDiversity" description="Allows civilization, space and captain creatures to retain their unique sentient voices outside of adventures, and as playable creatures. Does not currently affect Civilization or Space Stage itself." installerSystemVersion="1.0.1.1" hasCustomInstaller="false" isExperimental="true" dllsBuild="2.5.20">
+<prerequisite>Captain Voice Diversity.dll</prerequisite>
+<remove game="GalacticAdventures">*CaptainVoiceDiversity*</remove>
+<remove game="Spore">*CaptainVoiceDiversity*</remove>
+<remove>Captain Voice Diversity.dll</remove>
+</mod>

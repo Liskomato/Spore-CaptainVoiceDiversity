@@ -335,3 +335,7 @@ ASALocalRun/
 /Captain Voice Diversity/dllmain_old.cpp
 /Captain Voice Diversity/FunctionFinder.h
 /Captain Voice Diversity/FunctionFinder.cpp
+/Captain Voice Diversity/captainvoicediversity.cpp
+*.sporemod
+*.package
+Captain Voice Diversity.dll
