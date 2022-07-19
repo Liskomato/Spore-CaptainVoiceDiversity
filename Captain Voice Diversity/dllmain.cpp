@@ -15,9 +15,8 @@ void Initialize()
 	//  - Add new game modes
 	//  - Add new space tools
 	//  - Change materials
-//	CheatManager.AddCheat("functionFinder", new FunctionFinder());
 	
-	ManualBreakpoint();
+//	ManualBreakpoint();
 //	MessageManager.AddUnmanagedListener(new SporepediaStateListener(), id("SporepediaState"));   // Boolean value for checking if a large Sporepedia preview is opened.
 //	MessageManager.AddUnmanagedListener(new SporepediaStateListener(), id("CreatureMouthID"));   // For passing over animated creature's mouth type when not an adventure avatar.
 //	MessageManager.AddUnmanagedListener(new SporepediaStateListener(), UTFWin::MessageType::kMsgButtonClick);   // Close button for large Sporepedia previews.
@@ -30,26 +29,30 @@ using namespace Anim;
 uint32_t GetMouthType(eastl::vector<anim_block> blocks) {
 
 	// Declaring variables
-	uint32_t mouthID;
-	int i = 0;
+	uint32_t mouthID = 0;
+	uint32_t i = 0;
+	
 	
 	// Cycle through the blocks of the vector until a member variable soundIDMouth is found.
-	for (i = 0; !blocks[i].pBlock->soundIDMouth; i++) {
-		// Break loop if no mouth ID is found.
-		if (i == blocks.size() && !blocks[i].pBlock->soundIDMouth) {
+	for (i = 0; i < blocks.size(); i++) {
+		// If mouth ID is found, assign it to variable mouthID and break the loop.
+		if (blocks[i].pBlock->soundIDMouth) {
+			mouthID = blocks[i].pBlock->soundIDMouth;
 			break;
 		}
 	};
 	
-	// Return 0 as function value if no mouth part is found.
-	if (!blocks[i].pBlock->soundIDMouth) {
-		App::ConsolePrintF("Captain Voice Diversity: Error! No mouth part could be found for creature. Returning 0 as value.");
-		return 0;
-	}
 
 	// Return the member variable soundIDMouth as a value if found.
-	mouthID = blocks[i].pBlock->soundIDMouth;
-	return mouthID;												
+	if (mouthID != 0) {
+		return mouthID;
+	}
+
+
+	// Return 0 as function value if no mouth part is found.
+	App::ConsolePrintF("Captain Voice Diversity: Error! No mouth part could be found for creature. Returning 0 as value.");
+	return 0;
+													
 };
 
 
@@ -181,7 +184,7 @@ virtual_detour(LoadAnimation_detour, AnimatedCreature, AnimatedCreature, void(ui
 			uint32_t mouthID = 0;
 			mouthID = GetMouthType(this->p_cid->blocks);
 			SporepediaStateListener::SetMouthID(mouthID);
-			App::ConsolePrintF("Captain Voice Diversity: Mouth ID is 0x%X",mouthID);
+	//		App::ConsolePrintF("Captain Voice Diversity: Mouth ID is 0x%X",mouthID);
 	//		MessageManager.PostMSG(id("CreatureMouthID"), &mouthID);
 			
 		}
@@ -221,7 +224,7 @@ namespace Palettes {
 		bool detoured(IWindow* pWindow, const UTFWin::Message& message) {
 			
 		// Debugging information. Uncomment if you want.
-			App::ConsolePrintF("UI event: Window ID = 0x%X, messageType = 0x%X",pWindow->GetControlID(),message.eventType);
+		//	App::ConsolePrintF("UI event: Window ID = 0x%X, messageType = 0x%X",pWindow->GetControlID(),message.eventType);
 
 			if (pWindow->GetControlID() == 0xF3C6D819 && message.eventType == kMsgWinProcAdded) {
 
