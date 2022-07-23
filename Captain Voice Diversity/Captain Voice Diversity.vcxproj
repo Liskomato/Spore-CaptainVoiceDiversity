@@ -100,7 +100,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="captainvoicediversity.h" />
-    <ClInclude Include="captainvoice_editorpreview.h" />
     <ClInclude Include="SporepediaStateListener.h">
       <SubType>
       </SubType>

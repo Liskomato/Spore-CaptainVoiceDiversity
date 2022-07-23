@@ -16,7 +16,7 @@ void Initialize()
 	//  - Change materials
 	
 // Uncomment ManualBreakpoint() when you want to debug this program.
-// ManualBreakpoint();
+//	ManualBreakpoint();
 
 
 // 	In case listeners are needed again, uncomment the lines below.
@@ -233,25 +233,25 @@ virtual_detour(LoadCreature_detour, IAnimWorld, IAnimWorld, AnimatedCreature*(co
 
 };
 
-namespace Palettes {
+
 	//
 	// By detouring ItemViewer's HandleUIMessage function, we can set IsSporepediaOpen's boolean value when certain conditions are right.
 	//
-	virtual_detour(ItemViewer_HandleUIMessage_Detour, AdvancedItemViewer, IWinProc, bool(UTFWin::IWindow*,const UTFWin::Message&)) 
+	virtual_detour(ItemViewer_HandleUIMessage_Detour, Palettes::AdvancedItemViewer, UTFWin::IWinProc, bool(UTFWin::IWindow*,const UTFWin::Message&)) 
 	{
-		bool detoured(IWindow* pWindow, const UTFWin::Message& message) {
+		bool detoured(UTFWin::IWindow* pWindow, const UTFWin::Message& message) {
 			
 		// Debugging information. Uncomment if you want.
 		//	App::ConsolePrintF("UI event: Window ID = 0x%X, messageType = 0x%X",pWindow->GetControlID(),message.eventType);
 
-			if (pWindow->GetControlID() == 0xF3C6D819 && message.eventType == kMsgWinProcAdded) {
+			if (pWindow->GetControlID() == 0xF3C6D819 && message.eventType == UTFWin::kMsgWinProcAdded) {
 
 				SporepediaStateListener::SetSporepediaState(true);
 
 				App::ConsolePrintF("Captain Voice Diversity: Large Sporepedia preview is open. Set state to true.");
 		//		App::ConsolePrintF("Captain Voice Diversity DEBUG: Sent message to SporepediaStateListener to set boolean true.");
 			}
-			else if (pWindow->GetControlID() == 0xF3C6D819 && message.eventType == kMsgWinProcRemoved) {
+			else if (pWindow->GetControlID() == 0xF3C6D819 && message.eventType == UTFWin::kMsgWinProcRemoved) {
 			
 				SporepediaStateListener::SetSporepediaState(false);
 
@@ -263,7 +263,7 @@ namespace Palettes {
 		}
 	};
 
-}
+
 
 void Dispose()
 {
@@ -279,7 +279,7 @@ void AttachDetours()
 
 	LoadCreature_detour::attach(Address(ModAPI::ChooseAddress(0xa0b1c0, 0xa0b1c0)));
 
-	Palettes::ItemViewer_HandleUIMessage_Detour::attach(GetAddress(Palettes::AdvancedItemViewer, HandleUIMessage));
+	ItemViewer_HandleUIMessage_Detour::attach(GetAddress(Palettes::AdvancedItemViewer, HandleUIMessage));
 
 	// Call the attach() method on any detours you want to add
 	// For example: cViewer_SetRenderType_detour::attach(GetAddress(cViewer, SetRenderType));

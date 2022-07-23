@@ -22,9 +22,6 @@
     <ClInclude Include="captainvoicediversity.h">
       <Filter>Captain Voice Diversity</Filter>
     </ClInclude>
-    <ClInclude Include="captainvoice_editorpreview.h">
-      <Filter>Captain Voice Diversity</Filter>
-    </ClInclude>
     <ClInclude Include="SporepediaStateListener.h">
       <Filter>Captain Voice Diversity</Filter>
     </ClInclude>
