@@ -1,7 +1,6 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
 #include "stdafx.h"
 #include "captainvoicediversity.h"
-#include "captainvoice_editorpreview.h"
 #include "SporepediaStateListener.h"
 #include <Spore\Properties.h>
 #include <Spore\Palettes\AdvancedItemViewer.h>
@@ -16,10 +15,15 @@ void Initialize()
 	//  - Add new space tools
 	//  - Change materials
 	
-//	ManualBreakpoint();
-//	MessageManager.AddUnmanagedListener(new SporepediaStateListener(), id("SporepediaState"));   // Boolean value for checking if a large Sporepedia preview is opened.
-//	MessageManager.AddUnmanagedListener(new SporepediaStateListener(), id("CreatureMouthID"));   // For passing over animated creature's mouth type when not an adventure avatar.
-//	MessageManager.AddUnmanagedListener(new SporepediaStateListener(), UTFWin::MessageType::kMsgButtonClick);   // Close button for large Sporepedia previews.
+// Uncomment ManualBreakpoint() when you want to debug this program.
+// ManualBreakpoint();
+
+
+// 	In case listeners are needed again, uncomment the lines below.
+// 
+//  auto listener = new SporepediaStateListener();
+//	MessageManager.AddUnmanagedListener(listener, id("SporepediaState"));   // Boolean value for checking if a large Sporepedia preview is opened.
+//	MessageManager.AddUnmanagedListener(listener, id("CreatureMouthID"));   // For passing over animated creature's mouth type when not an adventure avatar.
 			
 }
 
@@ -58,84 +62,127 @@ uint32_t GetMouthType(eastl::vector<anim_block> blocks) {
 
 
 
-// DETOUR	
+// 
+// The main detour of the mod. It detours a function in address 0xa3b350 (March 2017) / 0xa138b0 (Disc) that determines the voice
+// of creatures depending on a hash map that gathers its information from audio_mouthmap~!base.soundProp file.
+// 
+// For the purposes of this mod, we want to change the value of the resource key with the hash 0x0B65639D (defaultIn in SporeModderFX), 
+// since that is the resource key that determines the voices of all civilized, space and captain creatures, along with being the fallback
+// for the case where certain audio types lack their own voice file variants. 
+// 
 member_detour(captainvoicediversity, CaptainVoiceDiversity, bool(uint32_t, uint8_t, uint32_t, uint32_t)) {
 	bool detoured(uint32_t a1, uint8_t a2, uint32_t a3, uint32_t a4) {
 		
+		//
+		// For reference, these two sets (InsA_set and BirA_set) are for when we want to match the creature's mouthID with them to determine if
+		//  we should give them a bird voice (BirA) or an insect voice (InsA).
+		//
+		// These are the "real" names of the hashes in question, as referenced from audio_mouthmap~!base.soundProp
+		// 
+		//									Mandible mouths (carnivore)
+		//							  MCA			MCB			 MCC		MCD
 		set<uint32_t> InsA_set = { 0x3C7E0F6E , 0x3C7E0F6D , 0x3C7E0F6C , 0x3C7E0F6B ,
 								   0x4072DC09 , 0x4072DC0A , 0x4072DC0B , 0x4072DC0C };
+		//							  ROA			ROB			 ROC		 ROD
+		//									Radial mouths (omnivore)
+		// 
+		//									   Bird beaks (omnivore)
+		//							  BCA			BCB			BCC			  BCD
 		set<uint32_t> BirA_set = { 0x1C99B34D , 0x1C99B34E , 0x1C99B34F , 0x1C99B348 ,
 								   0x2799C41C , 0x2799C41F , 0x2799C41E , 0x2799C419 };
-		
-		
+		//							  BHA			BHB			BHC			  BHD
+		//									   Bird beaks (herbivore)
+		// 
+		//
+		// 
+		// 
+		// SporepediaStateListener::GetSporepediaState() returns true if boolean value IsSporepediaOpen is true. 
+		// Based on that, we can give priority to Sporepedia preview creatures when a large Sporepedia card is open.
+		//
 		if (SporepediaStateListener::GetSporepediaState()) {
 		
+			// Gets the creature mouth ID that has been loaded in memory, to value SporepediaStateListener::previewCreatureMouthID.
 			uint32_t previewMouthType = SporepediaStateListener::GetMouthID();
 
-			if (previewMouthType) {
-				if (InsA_set.count(previewMouthType)) {
+			// Compare the received mouth ID with those on the two sets we defined before. If equal to one of the components in InsA_set, for example, 
+			// define defaultIn as "InsA".
+			//
+			if (InsA_set.count(previewMouthType)) {
+				this->voiceMap[0x0B65639D] = "InsA";
+			}
+			else if (BirA_set.count(previewMouthType)) {
+				this->voiceMap[0x0B65639D] = "BirA";
+			}
+			else {
+				this->voiceMap[0x0B65639D] = "MamA";
+			}
+		
+			// In other cases we set defaultIn into its vanilla behaviour, in which it has the value "MamA".
+			// 
+			// After that we return the original function.
+			//
+			return original_function(this, a1, a2, a3, a4);
+		
+		}
+		
+
+			// Otherwise we do not want the mod to trigger in the overall campaign, with the exception of editors and adventures, of course.
+		    //
+		if (!(Simulator::IsSpaceGame() || Simulator::IsCivGame() || Simulator::IsTribeGame() || Simulator::IsCreatureGame())) {
+			//
+			// Since the captain is arguably the biggest user of defaultIn as a value in adventures, we want to prioritize getting their
+			// voice right in adventures. Hence the following conditions.
+			//
+			if (Simulator::IsScenarioMode() && GameNounManager.GetAvatar()) {
+			
+					//	Get the AnimatedCreature pointer for the avatar/captain. 
+					AnimatedCreaturePtr avatarAnimated = GameNounManager.GetAvatar()->mpAnimatedCreature.get();
+			
+					//	Get the avatar's mouth type with a special function.
+					uint32_t mouthType = GetMouthType(avatarAnimated->p_cid->blocks);
+
+					// And at the end, compare it with the existing sets we set up at the start of this function.
+					if (InsA_set.count(mouthType)) {
+						this->voiceMap[0x0B65639D] = "InsA";
+					}
+					else if (BirA_set.count(mouthType)) {
+						this->voiceMap[0x0B65639D] = "BirA";
+					}
+					else {
+						this->voiceMap[0x0B65639D] = "MamA";
+					}
+
+			}
+			else {
+				
+			//  
+			// Usually this part of the function triggers when we're in the editors, since normally the creatures in them don't change
+			// their voice with the exception of the Tribal Outfitter (and tribal stage in general, for that matter).
+			//
+				uint32_t mouthType = SporepediaStateListener::GetMouthID();
+				
+				if (InsA_set.count(mouthType)) {
 					this->voiceMap[0x0B65639D] = "InsA";
 				}
-				else if (BirA_set.count(previewMouthType)) {
+				else if (BirA_set.count(mouthType)) {
 					this->voiceMap[0x0B65639D] = "BirA";
 				}
 				else {
 					this->voiceMap[0x0B65639D] = "MamA";
 				}
 			}
-			else {
-				App::ConsolePrintF("Captain Voice Diversity: Error! Null pointer exception. Setting value to default behaviour.");
-				this->voiceMap[0x0B65639D] = "MamA";
-			}
-			return original_function(this, a1, a2, a3, a4);
-		
-		}
-		
-		if (!(Simulator::IsSpaceGame() || Simulator::IsCivGame())) {
-			if (Simulator::IsScenarioMode() && GameNounManager.GetAvatar()) {
-			
-					AnimatedCreaturePtr avatarAnimated = GameNounManager.GetAvatar()->mpAnimatedCreature.get();
-
-					uint32_t mouthType = GetMouthType(avatarAnimated->p_cid->blocks);
-
-			//		bool SporepediaClosed = false;
-
-					if (InsA_set.count(mouthType)) {
-						this->voiceMap[0x0B65639D] = "InsA";
-					}
-					else if (BirA_set.count(mouthType)) {
-						this->voiceMap[0x0B65639D] = "BirA";
-					}
-					else {
-						this->voiceMap[0x0B65639D] = "MamA";
-					}
-					
-			//		MessageManager.PostMSG(id("SporepediaState"), &SporepediaClosed);
-
-			}
-			else {
-				uint32_t mouthType = SporepediaStateListener::GetMouthID();
-				
-				if (mouthType) {
-					if (InsA_set.count(mouthType)) {
-						this->voiceMap[0x0B65639D] = "InsA";
-					}
-					else if (BirA_set.count(mouthType)) {
-						this->voiceMap[0x0B65639D] = "BirA";
-					}
-					else {
-						this->voiceMap[0x0B65639D] = "MamA";
-					}
-				}
-				else {
-					App::ConsolePrintF("Captain Voice Diversity: Error! Null pointer exception. Setting value to default behaviour.");
-					this->voiceMap[0x0B65639D] = "MamA";
-				}
-			}
 		}
 		else {
+			//
+			// When in the campaign, we use default vanilla behaviour since the other voice types lack the audio files 
+			// "MamA" has for the later stages.
+			//
 			this->voiceMap[0x0B65639D] = "MamA";
 		}
+		//
+		// At the end, we return the original function here. If desired, we could also "turn off" the detour's functions so it all 
+		// returns to vanilla behaviour entirely.
+		//
 		 bool ret = original_function(this, a1, a2, a3, a4);
 //		 this->voiceMap[0x0B65639D] = "MamA";
 		 return ret;
@@ -143,82 +190,53 @@ member_detour(captainvoicediversity, CaptainVoiceDiversity, bool(uint32_t, uint8
 
 };
 
-/*virtual_detour(captainTypeEdit, cAnimWorld, IAnimWorld, AnimatedCreaturePtr(ResourceKey&, int, Vector3&, Vector3&, bool)) {
-	
-	AnimatedCreaturePtr detoured(ResourceKey & key, int a2, Vector3 & a3, Vector3 & a4, bool a5) {
+//
+// The detour for when we want to load creatures for the editor previews or the editors themselves. Unlike LoadAnimation(), this function should only
+// trigger once per creature.
+//
+virtual_detour(LoadCreature_detour, IAnimWorld, IAnimWorld, AnimatedCreature*(const ResourceKey&, int, const Vector3&, const Vector3&, bool)) {
+	AnimatedCreature* detoured(const ResourceKey & key, int a2, const Vector3 & V31, const Vector3 & V32, bool boolean) {
+		
+		//
+		// We first want to get the return value so we execute the original function first.
+		// We will assign it to variable "creature".
+		//
+		auto creature = original_function(this, key, a2, V31, V32, boolean);
 
-		if (Simulator::IsScenarioMode && key == GameNounManager.GetAvatar()->GetModelKey()) {
-			
-			PropertyListPtr keyPropList;
-			PropManager.GetPropertyList(key.instanceID,key.groupID,keyPropList);
-
-			
-			
-
-		//	App::Property* avatarModelType;
-		//	avatarPropList->GetProperty(0xB0351B13, avatarModelType);			
-
-		}
-		return original_function(this,key, a2, a3, a4, a5);
-	}
-	
-};*/
-
-/*static_detour(Create_Detour, Simulator::cCreatureAnimal* (const Vector3&, Simulator::cSpeciesProfile*, int, Simulator::cHerd*, bool, bool)) {
-	Simulator::cCreatureAnimal* detoured(const Vector3 & pPosition, Simulator::cSpeciesProfile * pSpecies, int age, Simulator::cHerd * pHerd, bool bIsAvatar, bool unk) {
-		if (bIsAvatar == true) {
-			;
-			return original_function(pPosition, pSpecies/*SpeciesManager.GetSpeciesProfile({0x066B8241, TypeIDs::crt, GroupIDs::CreatureModels}), age, pHerd, bIsAvatar, unk);
-		}
-		else {
-			return original_function(pPosition, pSpecies, age, pHerd, bIsAvatar, unk);
-		}
-	}
-};*/
-
-virtual_detour(LoadAnimation_detour, AnimatedCreature, AnimatedCreature, void(uint32_t, int*)) {
-	void detoured(uint32_t animID, int* pChoice) {
+		//
+		// We want to make sure the right conditions are set first before we do anything else.
+		// Either GetSporepediaState() is true or we are in one of the editors (not the adventure editor).
+		//
 
 		if ((Editors::GetEditor() && !Simulator::IsScenarioMode()) || SporepediaStateListener::GetSporepediaState()) {
 			
+		//
+		// If conditions are right, we get the now-loaded creature's mouth type and assign it to SporepediaStateListener::previewCreatureMouthID
+		// immediately after.
+		//
+
 			uint32_t mouthID = 0;
-			mouthID = GetMouthType(this->p_cid->blocks);
+			mouthID = GetMouthType(creature->p_cid->blocks);
 			SporepediaStateListener::SetMouthID(mouthID);
+
+	// There is also debug console output and message to be sent if they are needed.
+	// 
 	//		App::ConsolePrintF("Captain Voice Diversity: Mouth ID is 0x%X",mouthID);
 	//		MessageManager.PostMSG(id("CreatureMouthID"), &mouthID);
 			
 		}
 
-		return original_function(this, animID, pChoice);
+	// At the end, we return the "creature" variable, as we are now done.
+		return creature;
 	
 	}
 
 };
 
-/*member_detour(SporepediaShow_detour, Sporepedia::ShopperRequest, void(Sporepedia::ShopperRequest&)) {
-
-	void detoured(ShopperRequest &request) {
-		
-		bool SporepediaOpened = true;
-		MessageManager.PostMSG(id("SporepediaState"),&SporepediaOpened);
-		original_function(this, request);
-		
-	}
-
-};*/
 namespace Palettes {
-/*	member_detour(ItemViewerInitialize_detour, AdvancedItemViewer, void(const ResourceKey&, IWindow*, IWindow*, uint32_t, PaletteItem*, PaletteInfo*, bool))
-	{
-		void detoured(const ResourceKey & nameKey, IWindow * pWindow, IWindow * pParentWindow,
-			uint32_t messageID, PaletteItem * pItem, PaletteInfo * pPaletteInfo, bool b) {
-			original_function(this, nameKey, pWindow, pParentWindow, messageID, pItem, pPaletteInfo, b);
-
-			bool SporepediaOpen = true;
-			MessageManager.PostMSG(id("SporepediaState"), &SporepediaOpen);
-		}
-
-	};*/
-
+	//
+	// By detouring ItemViewer's HandleUIMessage function, we can set IsSporepediaOpen's boolean value when certain conditions are right.
+	//
 	virtual_detour(ItemViewer_HandleUIMessage_Detour, AdvancedItemViewer, IWinProc, bool(UTFWin::IWindow*,const UTFWin::Message&)) 
 	{
 		bool detoured(IWindow* pWindow, const UTFWin::Message& message) {
@@ -247,58 +265,21 @@ namespace Palettes {
 
 }
 
-/*virtual_detour(ItemViewerOpen_detour, Palettes::AdvancedItemViewer, Palettes::ItemViewer, void(ResourceKey&)) {
-
-	void detoured(ResourceKey& t) {
-	
-		bool SporepediaOpen = true;
-		MessageManager.PostMSG(id("SporepediaState"), &SporepediaOpen);
-
-//		uint32_t mouthID = GetMouthType(this->GetAnimatedCreature()->p_cid->blocks);
-//		MessageManager.PostMSG(id("CreatureMouthID"),&mouthID);
-		
-		original_function(this, t);
-
-	}
-
-};*/
-
-/*virtual_detour(ItemViewerClosed_detour, Palettes::AdvancedItemViewer, Palettes::ItemViewer, void(void)) {
-
-	void detoured() {
-
-		bool SporepediaOpen = false;
-		uint32_t mouthID = 0;
-
-		MessageManager.PostMSG(id("SporepediaState"), &SporepediaOpen);
-		MessageManager.PostMSG(id("CreatureMouthID"), &mouthID);
-
-		original_function(this);
-
-	}
-
-};*/
-
 void Dispose()
 {
 	// This method is called when the game is closing
+
+	// If you add listeners to this mod again, don't forget to uncomment the line below.
+	// delete listener;
 }
 
 void AttachDetours()
 {
 	captainvoicediversity::attach(Address(ModAPI::ChooseAddress(0xa138b0, 0xa3b350)));
 
-	LoadAnimation_detour::attach(Address(ModAPI::ChooseAddress(0xa0c5d0, 0xa0c5d0)));
+	LoadCreature_detour::attach(Address(ModAPI::ChooseAddress(0xa0b1c0, 0xa0b1c0)));
 
 	Palettes::ItemViewer_HandleUIMessage_Detour::attach(GetAddress(Palettes::AdvancedItemViewer, HandleUIMessage));
-
-	// UNUSED DETOURS
-	//	captainTypeEdit::attach(GetAddress(cAnimWorld,LoadCreature));
-	//	Create_Detour::attach(GetAddress(Simulator::cCreatureAnimal, Create));
-	//	SporepediaShow_detour::attach(GetAddress(Sporepedia::ShopperRequest, Show));
-	//	ItemViewerOpen_detour::attach(GetAddress(Palettes::AdvancedItemViewer, Load));
-	//	ItemViewerClosed_detour::attach(GetAddress(Palettes::AdvancedItemViewer, OnOutside));
-	//	Palettes::ItemViewerInitialize_detour::attach(GetAddress(Palettes::AdvancedItemViewer, Initialize));
 
 	// Call the attach() method on any detours you want to add
 	// For example: cViewer_SetRenderType_detour::attach(GetAddress(cViewer, SetRenderType));

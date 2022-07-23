@@ -36,15 +36,7 @@ bool SporepediaStateListener::HandleMessage(uint32_t messageID, void* message)
 	if (messageID == id("CreatureMouthID")) {
 		previewCreatureMouthID = *((uint32_t*)message);
 	}
-/*	if (messageID == UTFWin::MessageType::kMsgButtonClick) {
-		
-		auto targetMessage = *((UTFWin::Message*)message);
 
-		if (targetMessage.source->GetControlID() == 0x74174C59) {
-			IsSporepediaOpen = false;
-		}
-		
-	}*/
 	// Return true if the message has been handled. Other listeners will receive the message regardless of the return value.
 	return true;
 }
