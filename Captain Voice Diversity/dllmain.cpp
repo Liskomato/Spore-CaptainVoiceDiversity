@@ -194,14 +194,14 @@ member_detour(captainvoicediversity, CaptainVoiceDiversity, bool(uint32_t, uint8
 // The detour for when we want to load creatures for the editor previews or the editors themselves. Unlike LoadAnimation(), this function should only
 // trigger once per creature.
 //
-virtual_detour(LoadCreature_detour, IAnimWorld, IAnimWorld, AnimatedCreature*(const ResourceKey&, int, const Vector3&, const Vector3&, bool)) {
-	AnimatedCreature* detoured(const ResourceKey & key, int a2, const Vector3 & V31, const Vector3 & V32, bool boolean) {
+member_detour(LoadCreature_detour, IAnimWorld, AnimatedCreature*(void*,void*,uint32_t,void*,void*,void*, void*)) {
+	AnimatedCreature* detoured(void* a1, void* a2, uint32_t a3, void* a4, void* a5, void* a6, void* a7) {
 		
 		//
 		// We first want to get the return value so we execute the original function first.
 		// We will assign it to variable "creature".
 		//
-		auto creature = original_function(this, key, a2, V31, V32, boolean);
+		auto creature = original_function(this, a1, a2, a3, a4, a5, a6, a7);
 
 		//
 		// We want to make sure the right conditions are set first before we do anything else.
