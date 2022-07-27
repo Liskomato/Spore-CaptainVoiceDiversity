@@ -1,0 +1,7 @@
+bool islooped true
+key musicTemplate _InsAIn_base
+keys samples
+	vsoc_recruit_mad_idleInsAIn01
+	vsoc_recruit_mad_idleInsAIn03
+	vsoc_recruit_mad_idleInsAIn05
+end

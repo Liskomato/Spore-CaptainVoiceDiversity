@@ -1,0 +1,21 @@
+bool islooped true
+key musicTemplate _MamAIn_base
+keys samples
+	vsoc_recruit_mad_idleMamAIn01
+	vsoc_recruit_mad_idleMamAIn02
+	vsoc_recruit_mad_idleMamAIn03
+	vsoc_recruit_mad_idleMamAIn04
+	vsoc_recruit_mad_idleMamAIn05
+	vsoc_recruit_mad_idleMamAIn06
+	vsoc_recruit_mad_idleMamAIn07
+	vsoc_recruit_mad_idleMamAIn10
+	vsoc_recruit_mad_idleMamAIn11
+	vsoc_recruit_mad_idleMamAIn12
+	vsoc_recruit_mad_idleMamAIn13
+	vsoc_recruit_mad_idleMamAIn14
+	vsoc_recruit_mad_idleMamAIn15
+	vsoc_recruit_mad_idleMamAIn16
+	vsoc_recruit_mad_idleMamAIn17
+	vsoc_recruit_mad_idleMamAIn18
+	vsoc_recruit_mad_idleMamAIn19
+end

@@ -191,7 +191,7 @@ member_detour(captainvoicediversity, CaptainVoiceDiversity, bool(uint32_t, uint8
 };
 
 //
-// The detour for when we want to load creatures for the editor previews or the editors themselves. Unlike LoadAnimation(), this function should only
+// The detour for when we want to load creatures for the editor previews. Unlike LoadAnimation(), this function should only
 // trigger once per creature.
 //
 member_detour(LoadCreature_detour, IAnimWorld, AnimatedCreature*(void*,void*,uint32_t,void*,void*,void*, void*)) {
@@ -205,10 +205,10 @@ member_detour(LoadCreature_detour, IAnimWorld, AnimatedCreature*(void*,void*,uin
 
 		//
 		// We want to make sure the right conditions are set first before we do anything else.
-		// Either GetSporepediaState() is true or we are in one of the editors (not the adventure editor).
+		// For this, we've set our condition to be that GetSporepediaState() returns true.
 		//
 
-		if ((Editors::GetEditor() && !Simulator::IsScenarioMode()) || SporepediaStateListener::GetSporepediaState()) {
+		if (SporepediaStateListener::GetSporepediaState()) {
 			
 		//
 		// If conditions are right, we get the now-loaded creature's mouth type and assign it to SporepediaStateListener::previewCreatureMouthID
@@ -229,6 +229,30 @@ member_detour(LoadCreature_detour, IAnimWorld, AnimatedCreature*(void*,void*,uin
 	// At the end, we return the "creature" variable, as we are now done.
 		return creature;
 	
+	}
+
+};
+
+
+//
+// For editors, we can detour LoadAnimation safely since usually we only need to deal with one type of creature at once. 
+// This will also prevent previewed creatures' voices "sticking" to the main edited creature while browsing through Sporepedia.
+//
+virtual_detour(LoadAnimation_detour, AnimatedCreature, AnimatedCreature, void(uint32_t, int*)) {
+	void detoured(uint32_t animID, int* pChoice) {
+
+		if ((Editors::GetEditor() && !Simulator::IsScenarioMode()) && !SporepediaStateListener::GetSporepediaState()) {
+
+			uint32_t mouthID = 0;
+			mouthID = GetMouthType(this->p_cid->blocks);
+			SporepediaStateListener::SetMouthID(mouthID);
+			//		App::ConsolePrintF("Captain Voice Diversity: Mouth ID is 0x%X",mouthID);
+			//		MessageManager.PostMSG(id("CreatureMouthID"), &mouthID);
+
+		}
+
+		return original_function(this, animID, pChoice);
+
 	}
 
 };
@@ -278,6 +302,8 @@ void AttachDetours()
 	captainvoicediversity::attach(Address(ModAPI::ChooseAddress(0xa138b0, 0xa3b350)));
 
 	LoadCreature_detour::attach(Address(ModAPI::ChooseAddress(0xa0b1c0, 0xa0b1c0)));
+
+	LoadAnimation_detour::attach(Address(ModAPI::ChooseAddress(0xa0c5d0, 0xa0c5d0)));
 
 	ItemViewer_HandleUIMessage_Detour::attach(GetAddress(Palettes::AdvancedItemViewer, HandleUIMessage));
 

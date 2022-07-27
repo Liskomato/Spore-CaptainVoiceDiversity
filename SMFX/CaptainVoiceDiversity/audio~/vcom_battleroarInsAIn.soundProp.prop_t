@@ -1,0 +1,11 @@
+key musicTemplate _InsAIn_base
+keys samples
+	vcom_battleroarInsAIn01
+	vcom_battleroarInsAIn02
+	vcom_battleroarInsAIn03
+	vcom_battleroarInsAIn04
+	vcom_battleroarInsAIn05
+	vcom_battleroarInsAIn06
+	vcom_battleroarInsAIn07
+	vcom_battleroarInsAIn08
+end
