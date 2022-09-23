@@ -1,10 +1,11 @@
 # Captain Voice Diversity - A Spore ModAPI mod
-Allows civilization, space and captain creatures to retain their unique sentient voices outside of adventures, and as playable creatures. Does not currently affect Civilization or Space Stage itself.
+Allows civilization, space and captain creatures to retain their unique sentient voices in editors and when used as captains in Galactic Adventures. Does not currently affect creatures in Civilization or Space Stage.
 
 **Requires the following to...**
 ### Compile
 * SporeModder FX (for .package files)
 * Visual Studio 2019 (for the ModAPI code itself)
+* Spore ModAPI Development Kit
 * A zip file manager (for packing the .sporemod file ~by renaming a .zip file~)
 
 ### Install and play
