@@ -25,6 +25,9 @@
     <ClInclude Include="SporepediaStateListener.h">
       <Filter>Captain Voice Diversity</Filter>
     </ClInclude>
+    <ClInclude Include="DebugMode.h">
+      <Filter>Captain Voice Diversity</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -34,6 +37,9 @@
       <Filter>Internal</Filter>
     </ClCompile>
     <ClCompile Include="SporepediaStateListener.cpp">
+      <Filter>Captain Voice Diversity</Filter>
+    </ClCompile>
+    <ClCompile Include="DebugMode.cpp">
       <Filter>Captain Voice Diversity</Filter>
     </ClCompile>
   </ItemGroup>

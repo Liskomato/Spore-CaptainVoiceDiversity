@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "captainvoicediversity.h"
 #include "SporepediaStateListener.h"
+#include "DebugMode.h"
 #include <Spore\Properties.h>
 #include <Spore\Palettes\AdvancedItemViewer.h>
 
@@ -25,6 +26,8 @@ void Initialize()
 //	MessageManager.AddUnmanagedListener(listener, id("SporepediaState"));   // Boolean value for checking if a large Sporepedia preview is opened.
 //	MessageManager.AddUnmanagedListener(listener, id("CreatureMouthID"));   // For passing over animated creature's mouth type when not an adventure avatar.
 			
+// Adds the "switch" cheat for the mod's debugging mode.
+	CheatManager.AddCheat("CVDEnableDebug", new DebugMode());
 }
 
 using namespace Anim;
@@ -54,12 +57,21 @@ uint32_t GetMouthType(eastl::vector<anim_block> blocks) {
 
 
 	// Return 0 as function value if no mouth part is found.
-	App::ConsolePrintF("Captain Voice Diversity: Error! No mouth part could be found for creature. Returning 0 as value.");
+	if (DebugMode::debugEnabled) {
+		App::ConsolePrintF("Captain Voice Diversity DEBUG: No mouth part could be found for creature. This likely means the creature is mouthless, so returning 0 as value.");
+	}
 	return 0;
 													
 };
 
-
+// Function for printing debug information to the console.
+void PrintDebugVoiceInfo(uint32_t mouthID, string8 sentientVoiceType) {
+	// We need to first convert our two relevant strings to C-style strings, so they show properly in the console.
+	string mouth, sentient;
+	mouth.assign_convert(mouthMap[mouthID]);
+	sentient.assign_convert(sentientVoiceType);
+	App::ConsolePrintF("Captain Voice Diversity DEBUG - Mouth ID: 0x%X, Mouth type: %s, Sentient voice type: %s",mouthID,mouth,sentient);
+}
 
 
 // 
@@ -119,6 +131,10 @@ member_detour(captainvoicediversity, CaptainVoiceDiversity, bool(uint32_t, uint8
 		
 			// In other cases we set defaultIn into its vanilla behaviour, in which it has the value "MamA".
 			// 
+			// 
+			// Next, if the debug cheat is on, we send the debug information.
+			if (DebugMode::debugEnabled) PrintDebugVoiceInfo(previewMouthType,this->voiceMap[0x0B65639D]);
+
 			// After that we return the original function.
 			//
 			return original_function(this, a1, a2, a3, a4);
@@ -151,7 +167,7 @@ member_detour(captainvoicediversity, CaptainVoiceDiversity, bool(uint32_t, uint8
 					else {
 						this->voiceMap[0x0B65639D] = "MamA";
 					}
-
+					if (DebugMode::debugEnabled) PrintDebugVoiceInfo(mouthType, this->voiceMap[0x0B65639D]);
 			}
 			else {
 				
@@ -170,6 +186,7 @@ member_detour(captainvoicediversity, CaptainVoiceDiversity, bool(uint32_t, uint8
 				else {
 					this->voiceMap[0x0B65639D] = "MamA";
 				}
+				if (DebugMode::debugEnabled) PrintDebugVoiceInfo(mouthType, this->voiceMap[0x0B65639D]);
 			}
 		}
 		else {
@@ -184,6 +201,7 @@ member_detour(captainvoicediversity, CaptainVoiceDiversity, bool(uint32_t, uint8
 		// returns to vanilla behaviour entirely.
 		//
 		 bool ret = original_function(this, a1, a2, a3, a4);
+		 
 //		 this->voiceMap[0x0B65639D] = "MamA";
 		 return ret;
 	}
@@ -272,15 +290,19 @@ virtual_detour(LoadAnimation_detour, AnimatedCreature, AnimatedCreature, void(ui
 
 				SporepediaStateListener::SetSporepediaState(true);
 
-				App::ConsolePrintF("Captain Voice Diversity: Large Sporepedia preview is open. Set state to true.");
-		//		App::ConsolePrintF("Captain Voice Diversity DEBUG: Sent message to SporepediaStateListener to set boolean true.");
+				if (DebugMode::debugEnabled) {
+					App::ConsolePrintF("Captain Voice Diversity DEBUG: Large Sporepedia preview is open. Set state to true.");
+					//	App::ConsolePrintF("Captain Voice Diversity DEBUG: Sent message to SporepediaStateListener to set boolean true.");
+				}
 			}
 			else if (pWindow->GetControlID() == 0xF3C6D819 && message.eventType == UTFWin::kMsgWinProcRemoved) {
 			
 				SporepediaStateListener::SetSporepediaState(false);
 
-				App::ConsolePrintF("Captain Voice Diversity: Large Sporepedia preview is closed. Set state to false.");
-		//		App::ConsolePrintF("Captain Voice Diversity DEBUG: Sent message to SporepediaStateListener to set boolean false.");
+				if (DebugMode::debugEnabled) {
+					App::ConsolePrintF("Captain Voice Diversity DEBUG: Large Sporepedia preview is closed. Set state to false.");
+					//	App::ConsolePrintF("Captain Voice Diversity DEBUG: Sent message to SporepediaStateListener to set boolean false.");
+				}
 			}
 
 			return original_function(this, pWindow, message);
