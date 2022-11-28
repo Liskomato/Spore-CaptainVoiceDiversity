@@ -1,4 +1,5 @@
 # Captain Voice Diversity - A Spore ModAPI mod
+YouTube video showcase link: https://www.youtube.com/watch?v=fkTNstKUbLo
 Allows civilization, space and captain creatures to retain their unique sentient voices in editors and when used as captains in Galactic Adventures. Does not currently affect creatures in Civilization or Space Stage.
 
 **Requires the following to...**
