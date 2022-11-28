@@ -66,11 +66,7 @@ uint32_t GetMouthType(eastl::vector<anim_block> blocks) {
 
 // Function for printing debug information to the console.
 void PrintDebugVoiceInfo(uint32_t mouthID, string8 sentientVoiceType) {
-	// We need to first convert our two relevant strings to C-style strings, so they show properly in the console.
-	string mouth, sentient;
-	mouth.assign_convert(mouthMap[mouthID]);
-	sentient.assign_convert(sentientVoiceType);
-	App::ConsolePrintF("Captain Voice Diversity DEBUG - Mouth ID: 0x%X, Mouth type: %s, Sentient voice type: %s",mouthID,mouth,sentient);
+	App::ConsolePrintF("Captain Voice Diversity DEBUG - Mouth ID: 0x%X, Mouth type: %s, Sentient voice type: %s",mouthID, mouthMap[mouthID].c_str(), sentientVoiceType.c_str());
 }
 
 
