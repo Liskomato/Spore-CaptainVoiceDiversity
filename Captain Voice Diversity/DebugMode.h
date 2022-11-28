@@ -19,7 +19,7 @@ public:
 };
 
 // We use this to identify mouth type for debug info. 
-hash_map<uint32_t, string8> mouthMap {
+static hash_map<uint32_t, string8> mouthMap {
 	// Insect voice
 	{0x3C7E0F6E, "MCA"},
 	{0x3C7E0F6D, "MCB"},
