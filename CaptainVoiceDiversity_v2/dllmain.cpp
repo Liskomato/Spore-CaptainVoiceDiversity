@@ -13,13 +13,15 @@ void Initialize()
 	//  - Change materials
 }
 
-member_detour(captainvoicediversity, CaptainVoiceDiversity, void(uint32_t, char8_t*, char8_t*, int32_t)) {
-	void detoured(uint32_t param_2, char8_t* param_3, char8_t* param_4, int32_t param_5) {
+member_detour(captainvoicediversity, CaptainVoiceDiversity, void(void*, char8_t*, char8_t*, int32_t)) {
+	void detoured(void* p1, char8_t* p2, char8_t* p3, int32_t p4) {
 		
-		if (param_2 == 1) param_2 = 0;
-		original_function(this,param_2, param_3, param_4, param_5);
+		
+		original_function(this,p1, p2, p3, p4);
 	}
 };
+
+
 void Dispose()
 {
 	// This method is called when the game is closing
@@ -27,7 +29,8 @@ void Dispose()
 
 void AttachDetours()
 {
-	captainvoicediversity::attach(Address(ModAPI::ChooseAddress(0xa138b0, 0xa3b350)));
+	captainvoicediversity::attach(Address(ModAPI::ChooseAddress(0xa3b200, 0xa3b350)));
+
 
 	// Call the attach() method on any detours you want to add
 	// For example: cViewer_SetRenderType_detour::attach(GetAddress(cViewer, SetRenderType));
