@@ -317,7 +317,7 @@ void Dispose()
 
 void AttachDetours()
 {
-	captainvoicediversity::attach(Address(ModAPI::ChooseAddress(0xa138b0, 0xa3b350)));
+	captainvoicediversity::attach(Address(ModAPI::ChooseAddress(0xa3b200, 0xa3b350)));
 
 	LoadCreature_detour::attach(Address(ModAPI::ChooseAddress(0xa0b1c0, 0xa0b1c0)));
 

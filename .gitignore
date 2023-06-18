@@ -339,5 +339,5 @@ ASALocalRun/
 /Captain Voice Diversity/captainvoice_editorpreview.h
 *.sporemod
 *.package
-Captain Voice Diversity.dll
+*.dll
 !/SMFX/**/*
