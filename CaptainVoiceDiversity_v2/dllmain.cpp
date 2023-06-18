@@ -20,7 +20,14 @@ member_detour(captainvoicediversity, CaptainVoiceDiversity, void(void*, char8_t*
 		original_function(this,p1, p2, p3, p4);
 	}
 };
-
+member_detour(cvd_assigndata, CaptainVoiceDiversity, void(int, int*)) {
+	void detoured(int id, int* target_data) {
+		original_function(this, id, target_data);
+		if (id == 0x39f9e08 && *target_data > 5) {
+			*target_data = 5;
+		}
+	}
+};
 
 void Dispose()
 {
@@ -30,7 +37,7 @@ void Dispose()
 void AttachDetours()
 {
 	captainvoicediversity::attach(Address(ModAPI::ChooseAddress(0xa3b200, 0xa3b350)));
-
+	cvd_assigndata::attach(Address(ModAPI::ChooseAddress(0xa0fa40,0xa0fa30)));
 
 	// Call the attach() method on any detours you want to add
 	// For example: cViewer_SetRenderType_detour::attach(GetAddress(cViewer, SetRenderType));
